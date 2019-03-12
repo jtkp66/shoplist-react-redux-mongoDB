@@ -2,8 +2,8 @@ import axios from "axios";
 import { returnErrors } from "./errorActions";
 
 import {
-  USER_LOADING,
   USER_LOADED,
+  USER_LOADING,
   AUTH_ERROR,
   LOGIN_SUCCESS,
   LOGIN_FAIL,
@@ -11,9 +11,8 @@ import {
   REGISTER_SUCCESS,
   REGISTER_FAIL
 } from "./types";
-import { userInfo } from "os";
 
-// Check token and load user from routes/api/auth.js --User.findById.
+// Check token & load user
 export const loadUser = () => (dispatch, getState) => {
   // User loading
   dispatch({ type: USER_LOADING });
@@ -34,11 +33,12 @@ export const loadUser = () => (dispatch, getState) => {
     });
 };
 
+// Register User
 export const register = ({ name, email, password }) => dispatch => {
   // Headers
   const config = {
     headers: {
-      "Content-Type": "applications/json"
+      "Content-Type": "application/json"
     }
   };
 
@@ -54,25 +54,65 @@ export const register = ({ name, email, password }) => dispatch => {
       })
     )
     .catch(err => {
+      dispatch(
+        returnErrors(err.response.data, err.response.status, "REGISTER_FAIL")
+      );
       dispatch({
         type: REGISTER_FAIL
       });
     });
 };
 
+// Login User
+export const login = ({ email, password }) => dispatch => {
+  // Headers
+  const config = {
+    headers: {
+      "Content-Type": "application/json"
+    }
+  };
+
+  // Request body
+  const body = JSON.stringify({ email, password });
+
+  axios
+    .post("/api/auth", body, config)
+    .then(res =>
+      dispatch({
+        type: LOGIN_SUCCESS,
+        payload: res.data
+      })
+    )
+    .catch(err => {
+      dispatch(
+        returnErrors(err.response.data, err.response.status, "LOGIN_FAIL")
+      );
+      dispatch({
+        type: LOGIN_FAIL
+      });
+    });
+};
+
+// Logout User
+export const logout = () => {
+  return {
+    type: LOGOUT_SUCCESS
+  };
+};
+
 // Setup config/headers and token
 export const tokenConfig = getState => {
-  // Get tokenn from local storage
+  // Get token from localstorage
   const token = getState().auth.token;
 
   // Headers
   const config = {
     headers: {
-      "Content-type": "application.json"
+      "Content-type": "application/json"
     }
   };
 
-  // If token add to headers
+  // If token, add to headers
   if (token) {
     config.headers["x-auth-token"] = token;
   }
